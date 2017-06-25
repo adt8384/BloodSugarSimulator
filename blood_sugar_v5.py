@@ -183,9 +183,11 @@ class BloodSugarSimulator:
 					#glycation
 					self.y1.append(glycation)
 					self.x1.append(customdate)
-		
+					
+					
 				#compute values every minute
 				curr_ts += 60
+				secs += 60
 		except Exception as e:
 			print "Exception occured %s" % str(e)
 			sys.exit(1)
