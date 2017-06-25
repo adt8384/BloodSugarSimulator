@@ -2,8 +2,9 @@ import sys
 import datetime, time
 from intervaltree import Interval, IntervalTree
 import matplotlib.pyplot as plt
-import numpy
+#import numpy
 from matplotlib.dates import DateFormatter
+
 
 
 def get_date_time_ts(dt, tm):
@@ -23,11 +24,12 @@ if len(sys.argv) < 2:
 
 input_file = sys.argv[1]
 # change ts1 to beginning of day which is 9 am
-ts1 = 1498233600.0
+#ts1 = 1498233600.0
 #ts1 = get_date_time_ts(time.strftime("%m-%d-%Y"),'9:00')
 # change ts2 to end of day.
-ts2 = get_date_time_ts(time.strftime("%m-%d-%Y"), '18:00')
-
+#ts2 = get_date_time_ts(time.strftime("%m-%d-%Y"), '18:00')
+ts1 = 0.0
+ts2 = 0.0
 # set it to 80 to blood sugar.
 blood_sugar_count = 80
 # glycation
@@ -35,15 +37,31 @@ glycation = 0
 # change duration. default set to 1800s or 30 minutes.
 duration = 1800
 count = 0
-gg = dict()
+
 x = []
 y = []
-
+x1 = []
+y1 = []
+currentdate = None
 try:
+	
 	fd = open(input_file, 'r')
 	int_tree = IntervalTree()
 	for line in fd:
 		fields = line.split()
+		
+		if (currentdate):
+			if (currentdate != fields[0]):
+				#currentdate = fields[0]
+				#ts1 = get_date_time_ts(fields[0], '9:00')
+				#ts2 = get_date_time_ts(fields[0], '18:00')
+				print "Usage: Enter data for same day only"
+				exit()
+		else:
+			currentdate = fields[0]	
+			ts1 = get_date_time_ts(fields[0], '9:00')
+			ts2 = get_date_time_ts(fields[0], '19:00')
+			
 		if fields[2] == 'F':
 			begin = get_date_time_ts(fields[0], fields[1])
 			# end time for food is 2 hours.
@@ -59,10 +77,17 @@ try:
 			int_tree[begin:end] = -data
 	#print int_tree
 	
-	print "Blood Sugar Graph:"
+	#print "Blood Sugar Graph:"
+	
+	#first point for blood sugar
 	y.append(blood_sugar_count)		
 	customdate = get_date_time_hhmm(ts1)
 	x.append(customdate)
+	
+	#first point for glycation
+	y1.append(glycation)
+	x1.append(customdate)
+	
 	
 	while ts1 < ts2:
 		ivs = int_tree.search(ts1)
@@ -79,38 +104,51 @@ try:
 				#print blood_sugar_count
 		
 		if blood_sugar_count > 150:
-			glycation += 1
+			glycation = glycation + 1
+			#print glycation
 			
 		
 		if ( count % 1800 == 0):
-			print "%s -> %s" %(time.strftime('%m-%d-%Y %H:%M', 
-							time.localtime(ts1)), blood_sugar_count) 
-			gg[ts1] = glycation
-			
+			#print "%s -> %s -> %s" %(time.strftime('%m-%d-%Y %H:%M', 
+			#				time.localtime(ts1)), blood_sugar_count, glycation) 
+			#blood sugar
 			y.append(blood_sugar_count)		
 			customdate = get_date_time_hhmm(ts1)
 			x.append(customdate)
+			
+			#glycation
+			y1.append(glycation)
+			x1.append(customdate)
 		
 
 		# reset glycation to zero after 1 day
 		if (count % 86400 == 0):
-			glycation = 0
+			#glycation = 0
 			count = 0	
 		
 		ts1 += 60
 		count += 60
-	print "Glycation Graph:"
-	for g in gg:
-		print "%s -> %s" %(time.strftime('%m-%d-%Y %H:%M',
-						time.localtime(g)),gg[g])
-						
 	
-	# plot
+	# plot blood sugar
+	b = plt.figure (1)
 	formatter = DateFormatter('%H:%M')
 	plt.plot(x,y)
-	#plt.gcf().autofmt_xdate()
 	plt.gcf().axes[0].xaxis.set_major_formatter(formatter)
-	plt.show()	
+	plt.xlabel('Time')
+	plt.ylabel('Blood Sugar')
+	#plt.show()	
+	b.show()
+	
+	#plot glycation index
+	g = plt.figure(2)
+	formatter = DateFormatter('%H:%M')
+	plt.plot(x1,y1)
+	plt.gcf().axes[0].xaxis.set_major_formatter(formatter)
+	plt.xlabel('Time')
+	plt.ylabel('Glycation Index')
+	g.show()
+	
+	plt.show()
 	
 except IOError as e:
 	print "Failed to open the input file %s" % input_file
