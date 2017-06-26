@@ -3,7 +3,7 @@ import datetime, time
 from intervaltree import Interval, IntervalTree
 import matplotlib.pyplot as plt
 #import numpy
-from matplotlib.dates import DateFormatter
+from matplotlib.dates import DateFormatter,MinuteLocator
 import csv
 
 
@@ -130,7 +130,8 @@ class BloodSugarSimulator:
 			self.y.append(self.blood_sugar_count)		
 			customdate = BloodSugarSimulator.get_date_time_hhmm(self.ts1)
 			self.x.append(customdate)
-	
+			print customdate
+			
 			#first point for glycation graph
 			self.y1.append(self.glycation)
 			self.x1.append(customdate)		
@@ -197,18 +198,24 @@ class BloodSugarSimulator:
 		b = plt.figure(1)
 		formatter = DateFormatter('%H:%M')
 		plt.plot(self.x,self.y)
+		plt.gcf().axes[0].xaxis.set_major_locator(MinuteLocator(interval  = 30))   
 		plt.gcf().axes[0].xaxis.set_major_formatter(formatter)
 		plt.xlabel('Time')
 		plt.ylabel('Blood Sugar')
+		plt.title('Blood Sugar graph for 1 day')
+		plt.xticks(rotation='vertical')
 		b.show()
 
 	def plot_graph_glycation(self):
 		b = plt.figure(2)
 		formatter = DateFormatter('%H:%M')
 		plt.plot(self.x1,self.y1)
+		plt.gcf().axes[0].xaxis.set_major_locator(MinuteLocator(interval  = 30))   
 		plt.gcf().axes[0].xaxis.set_major_formatter(formatter)
 		plt.xlabel('Time')
 		plt.ylabel('Glycation Index')
+		plt.title('Glycation Index graph for 1 day')
+		plt.xticks(rotation='vertical')
 		b.show()
 
 if len(sys.argv) < 4:
